@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         Int          @id @default(autoincrement())
+  email      String       @unique
+  password   String
+  Credential Credential[]
+  NetWork    NetWork[]
+
+  @@map("users")
+}
+
+model Credential {
+  id       Int    @id @default(autoincrement())
+  title    String
+  url      String
+  username String
+  password String
+  userId   Int
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([title, userId])
+  @@map("credentials")
+}
+
+model NetWork {
+  id       Int    @id @default(autoincrement())
+  title    String
+  netWork  String
+  password String
+  userId   Int
+  user     User   @relation(fields: [userId], references: [id])
+
+  @@unique([title, userId])
+  @@map("networks")
+}
