@@ -6,7 +6,8 @@ import { netWorkSchema } from "@/schemas";
 
 const netWorkRouter = Router();
 
-netWorkRouter.all("/*", authenticateToken)
+netWorkRouter
+  .all("/*", authenticateToken)
   .get("/", findAllNetWorks)
   .post("/", validateBody(netWorkSchema), createNetWork)
   .get("/:id", findNetWork)

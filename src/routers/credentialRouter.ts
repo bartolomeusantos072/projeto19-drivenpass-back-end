@@ -6,7 +6,8 @@ import { credentialSchema } from "@/schemas";
 
 const credentialRouter = Router();
 
-credentialRouter.all("/*", authenticateToken)
+credentialRouter
+  .all("/*", authenticateToken)
   .get("/", findAllCredentials)
   .post("/", validateBody(credentialSchema), createCredential)
   .get("/:id", findCredential)
