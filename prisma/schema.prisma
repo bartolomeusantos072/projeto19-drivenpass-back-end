@@ -37,7 +37,7 @@ model Credential {
   userId   Int
   user     User   @relation(fields: [userId], references: [id])
 
-  @@unique([title, userId])
+  
   @@map("credentials")
 }
 
