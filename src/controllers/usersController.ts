@@ -5,9 +5,6 @@ import usersService from "@/services/usersService";
 
 export async function usersPost(req: Request, res: Response) {
   const { email, password } = req.body as CreateUserParams;
-  if(!email || !password) {
-    res.status(httpStatus.BAD_REQUEST);
-  }
   
   try {
     const user = await usersService.createUser({ email, password });

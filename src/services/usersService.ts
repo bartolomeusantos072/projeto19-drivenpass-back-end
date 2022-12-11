@@ -1,17 +1,21 @@
 import bcrypt from "bcrypt";
 import { User } from "@prisma/client";
 import { CreateUserParams } from "@/schemas";
-import { conflictError } from "@/errors";
+import { cannotEnrollBeforeStartDateError, conflictError } from "@/errors";
 import usersRepository from "@/repositories/usersRepository";
 
-export async function createUser({ email, password }: CreateUserParams): Promise<User> {
+export type ResponseUser = Pick<User, "id"| "email">;
+
+export async function createUser({ email, password }: CreateUserParams): Promise<ResponseUser> {
   await validateUniqueEmailOrFail(email);
 
   const hashedPassword = await bcrypt.hash(password, 12);
-  return usersRepository.create({
+  const result = await usersRepository.create({
     email,
     password: hashedPassword,
   });
+  if(!result) throw cannotEnrollBeforeStartDateError();
+  return { id: result.id, email: result.email };
 }
 
 async function validateUniqueEmailOrFail(email: string) {
