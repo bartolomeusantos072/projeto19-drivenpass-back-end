@@ -1,15 +1,26 @@
-import { PrismaClient } from "@prisma/client"
-const prisma = new PrismaClient()
+import { faker } from "@faker-js/faker";
+import bcrypt from "bcrypt";
+import { PrismaClient } from "@prisma/client";
+const prisma = new PrismaClient();
 async function main() {
-//escreva seu codigo aqui
+  let user = await prisma.user.findFirst();
+  if(!user) {
+    user = await prisma.user.create({
+      data: {
+        email: faker.internet.email(),
+        password: await bcrypt.hash("1234567890", 12)
+      }
+    });
+  }
 }
 main()
   .then(async () => {
-    await prisma.$disconnect()
+    await prisma.$disconnect();
   })
   .catch(async (e) => {
-    console.error(e)
-    await prisma.$disconnect()
-    process.exit(1)
-})
+    // eslint-disable-next-line no-console
+    console.error(e);
+    await prisma.$disconnect();
+    process.exit(1);
+  });
 

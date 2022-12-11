@@ -20,7 +20,7 @@ function validate(schema: ObjectSchema, type: "body" | "params") {
     if (!error) {
       next();
     } else {
-      res.status(httpStatus.BAD_REQUEST).send(invalidDataError(error.details.map((d) => d.message)).details);
+      res.status(httpStatus.BAD_REQUEST).send(invalidDataError(error.details.map((d) => d.message)).details);      
     }
   };
 }
