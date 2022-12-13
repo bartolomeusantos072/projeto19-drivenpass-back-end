@@ -1,4 +1,5 @@
 import app, { init } from "@/app";
+import { invalidCredentialsError } from "@/errors";
 import { faker } from "@faker-js/faker";
 import httpStatus from "http-status";
 import supertest from "supertest";
@@ -56,7 +57,7 @@ describe("POST /auth/sign-in", () => {
 
       const response = await server.post("/auth/sign-in").send({
         ...body,
-        password: faker.lorem.word(),
+        password: faker.internet.password(10),
       });
 
       expect(response.status).toBe(httpStatus.UNAUTHORIZED);
