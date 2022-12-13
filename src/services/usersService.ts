@@ -14,7 +14,6 @@ export async function createUser({ email, password }: CreateUserParams): Promise
     email,
     password: hashedPassword,
   });
-  if(!result) throw cannotEnrollBeforeStartDateError();
   return { id: result.id, email: result.email };
 }
 
