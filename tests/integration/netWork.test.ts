@@ -16,16 +16,16 @@ beforeAll(async () => {
 
 const server = supertest(app);
 
-describe("POST credential", () => {
+describe("POST netWork", () => {
   it("should respond with status 401 if no token is given", async () => {
-    const response = await server.post("/credentials");
+    const response = await server.post("/network");
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
     
   it("should respond with status 401 if given token is not valid", async () => {
     const token = faker.lorem.word();
     
-    const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.post("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
@@ -34,7 +34,7 @@ describe("POST credential", () => {
     const userWithoutSession = await createUser();
     const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
     
-    const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.post("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
@@ -43,7 +43,7 @@ describe("POST credential", () => {
     it("should respond with status 400 when body is not present", async () => {
       const token = await generateValidToken();
 
-      const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`);
+      const response = await server.post("/network").set("Authorization", `Bearer ${token}`);
 
       expect(response.status).toBe(httpStatus.BAD_REQUEST);
     });
@@ -52,7 +52,7 @@ describe("POST credential", () => {
       const token = await generateValidToken();
       const body = { [faker.lorem.word()]: faker.lorem.word() };
 
-      const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`).send(body);
+      const response = await server.post("/network").set("Authorization", `Bearer ${token}`).send(body);
 
       expect(response.status).toBe(httpStatus.BAD_REQUEST);
     });
@@ -60,55 +60,33 @@ describe("POST credential", () => {
   describe("when body is valid", () => {
     const generateValidBody = () => ({
       title: faker.internet.domainWord(),
-      url: faker.internet.url(),
-      username: faker.internet.email(),
+      netWork: faker.internet.userName(),
       password: faker.internet.password()
     });
     
-    it("should respond with status 201 and create new credentials if there is not any", async () => {
+    it("should respond with status 201 and create new network if there is not any", async () => {
       const user = await  createUser();
       const token = await generateValidToken(user);
       const body = generateValidBody();
 
-      const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`).send(body);
+      const response = await server.post("/network").set("Authorization", `Bearer ${token}`).send(body);
 
       expect(response.status).toBe(httpStatus.CREATED);
-      const credentials = await prisma.credential.findFirst({ where: { title: body.title } });
-      expect(credentials).toBeDefined();
+      const network = await prisma.netWork.findFirst({ where: { title: body.title } });
+      expect(network).toBeDefined();
     });
-    it("should respond with status 409 when create new credentials with conflit title", async () => {
+    it("should respond with status 409 when create new network with conflit title", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
-      const credential = generateValidBody();
-      const insertCredential = await prisma.credential.create({
-        data: { ...credential, userId: user.id }
+      const wifi = generateValidBody();
+      const insertNetWork = await prisma.netWork.create({
+        data: { ...wifi, userId: user.id }
       });
-      const { title, url, username, password } = credential;
+      const { title, netWork, password } = wifi;
     
-      await prisma.credential.findFirst( { where: { userId: user.id, title } } );
+      await prisma.netWork.findFirst( { where: { userId: user.id, title } } );
 
-      const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`).send( { title: insertCredential.title, url, username, password });
-  
-      expect(response.status).toBe(httpStatus.CONFLICT);
-    });
-
-    it("should respond with status 409 when create new credentials with conflit url Greater 2", async () => {
-      const user = await createUser();
-      const token = await generateValidToken(user);
-      const credential = generateValidBody();
-
-      await prisma.credential.create({
-        data: { ...credential, userId: user.id }
-      });
-      const { title, url, username, password } = credential;
-      
-      await prisma.credential.create({
-        data: { ...credential, url: credential.url, title: faker.lorem.word(), userId: user.id }
-      });
-
-      await prisma.credential.findFirst( { where: { userId: user.id, title } } );
-
-      const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`).send( { title: faker.lorem.word(), url: credential.url, username, password });
+      const response = await server.post("/network").set("Authorization", `Bearer ${token}`).send( { title: insertNetWork.title, netWork, password });
   
       expect(response.status).toBe(httpStatus.CONFLICT);
     });
@@ -116,32 +94,31 @@ describe("POST credential", () => {
   describe("when body is invalid", () => {
     const generateInvalidBody = () => ({
       title: faker.internet.domainWord(),
-      url: "",
-      username: faker.internet.email(),
+      netWork: "",
       password: faker.internet.password()
     });
 
-    it("should respond with status 400 and create new credentials if there is not any", async () => {
+    it("should respond with status 400 and create new network if there is not any", async () => {
       const body = generateInvalidBody();
       const token = await generateValidToken();
 
-      const response = await server.post("/credentials").set("Authorization", `Bearer ${token}`).send(body);
+      const response = await server.post("/network").set("Authorization", `Bearer ${token}`).send(body);
 
       expect(response.status).toBe(httpStatus.BAD_REQUEST);
     });
   });
 });
 
-describe("DELETE credential/id", () => {
+describe("DELETE wifi/id", () => {
   it("should respond with status 401 if no token is given", async () => {
-    const response = await server.delete("/credentials");
+    const response = await server.delete("/network");
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
     
   it("should respond with status 401 if given token is not valid", async () => {
     const token = faker.lorem.word();
     
-    const response = await server.delete("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.delete("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
@@ -150,74 +127,72 @@ describe("DELETE credential/id", () => {
     const userWithoutSession = await createUser();
     const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
     
-    const response = await server.delete("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.delete("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
   describe("when params is invalid", () => {
     const generateValidBody = () => ({
       title: faker.internet.domainWord(),
-      url: faker.internet.url(),
-      username: faker.internet.email(),
+      netWork: faker.internet.userName(),
       password: faker.internet.password()
     });
 
-    it("should respond with status 204 when credentialId no exists", async () => {
+    it("should respond with status 204 when netWorkId no exists", async () => {
       const token = await generateValidToken();
-      const credentialId = 0;
-      const response = await server.delete(`/credentials/${credentialId}`).set("Authorization", `Bearer ${token}`);
+      const netWorkId = 0;
+      const response = await server.delete(`/network/${netWorkId}`).set("Authorization", `Bearer ${token}`);
       expect(response.status).toBe(httpStatus.NO_CONTENT);
     });
-    it("should respond with status 500 when not informing the credentialId parameter", async () => {
+    it("should respond with status 500 when not informing the netWorkId parameter", async () => {
       const token = await generateValidToken();
-      const response = await server.delete("/credentials").set("Authorization", `Bearer ${token}`);
+      const response = await server.delete("/network").set("Authorization", `Bearer ${token}`);
       expect(response.status).toBe(httpStatus.INTERNAL_SERVER_ERROR);
     });
-    it("should respond with status 404 when credentialId does not belong to the user", async () => {
+    it("should respond with status 404 when netWorkId does not belong to the user", async () => {
       const user2 = await createUser();
       const token2 = await generateValidToken(user2);
-      const credential = generateValidBody();
-      const insertCredential = await prisma.credential.create({
-        data: { ...credential, userId: user2.id }
+      const netWork = generateValidBody();
+      const insertNetWork = await prisma.netWork.create({
+        data: { ...netWork, userId: user2.id }
       });
       const user = await createUser();
       const token = await generateValidToken(user);
-      const response = await server.delete(`/credentials/${insertCredential.id}`).set("Authorization", `Bearer ${token}`);
+      const response = await server.delete(`/network/${insertNetWork.id}`).set("Authorization", `Bearer ${token}`);
       
       expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
   });
   describe("when params is valid", () => {
-    const generateCredential = () => ({
+    const generateNetWork = () => ({
       title: faker.internet.domainWord(),
-      url: faker.internet.url(),
-      username: faker.internet.email(),
+      netWork: faker.internet.userName(),
       password: encrypt(faker.internet.password())
     });
-    it("should respond with status 301 when credentialId exists", async () => {
+    it("should respond with status 301 when netWorkId exists", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
-      const data = generateCredential();
+      const data = generateNetWork();
 
-      const credential =  await prisma.credential.create({
+      const netWork =  await prisma.netWork.create({
         data: { ...data, userId: user.id }
       });
-      const response = await server.delete(`/credentials/${credential.id}`).set("Authorization", `Bearer ${token}`);
+      const response = await server.delete(`/network/${netWork.id}`).set("Authorization", `Bearer ${token}`);
       expect(response.status).toBe(httpStatus.MOVED_PERMANENTLY);
     });
   });
 });
 
-describe("GET credentials/:id", () => {
+describe("GET netWork/:id", () => {
   it("should respond with status 401 if no token is given", async () => {
-    const response = await server.get("/credentials");
+    const response = await server.get("/network");
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
     
   it("should respond with status 401 if given token is not valid", async () => {
     const token = faker.lorem.word();
     
-    const response = await server.get("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.get("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
@@ -226,7 +201,7 @@ describe("GET credentials/:id", () => {
     const userWithoutSession = await createUser();
     const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
     
-    const response = await server.get("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.get("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
@@ -234,63 +209,61 @@ describe("GET credentials/:id", () => {
   describe("when params is invalid", () => {
     const generateValidBody = () => ({
       title: faker.internet.domainWord(),
-      url: faker.internet.url(),
-      username: faker.internet.email(),
+      netWork: faker.internet.userName(),
       password: faker.internet.password()
     });
 
-    it("should respond with status 204 when credentialId no exists", async () => {
+    it("should respond with status 204 when netWorkId no exists", async () => {
       const token = await generateValidToken();
-      const credentialId = 0;
-      const response = await server.get(`/credentials/${credentialId}`).set("Authorization", `Bearer ${token}`);
+      const netWorkId = 0;
+      const response = await server.get(`/network/${netWorkId}`).set("Authorization", `Bearer ${token}`);
       expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
-    it("should respond with status 404 when credentialId does not belong to the user", async () => {
+    it("should respond with status 404 when netWorkId does not belong to the user", async () => {
       const user2 = await createUser();
       const token2 = await generateValidToken(user2);
-      const credential = generateValidBody();
-      const insertCredential = await prisma.credential.create({
-        data: { ...credential, userId: user2.id }
+      const netWork = generateValidBody();
+      const insertNetWork = await prisma.netWork.create({
+        data: { ...netWork, userId: user2.id }
       });
       const user = await createUser();
       const token = await generateValidToken(user);
-      const response = await server.get(`/credentials/${insertCredential.id}`).set("Authorization", `Bearer ${token}`);
+      const response = await server.get(`/network/${insertNetWork.id}`).set("Authorization", `Bearer ${token}`);
       
       expect(response.status).toBe(httpStatus.NOT_FOUND);
     });
   });
   
   describe("when params is valid", () => {
-    const generateCredential = () => ({
+    const generateNetWork = () => ({
       title: faker.internet.domainWord(),
-      url: faker.internet.url(),
-      username: faker.internet.email(),
+      netWork: faker.internet.userName(),
       password: encrypt(faker.internet.password())
     });
-    it("should respond with status 200 when credentialId exists", async () => {
+    it("should respond with status 200 when netWorkId exists", async () => {
       const user = await createUser();
       const token = await generateValidToken(user);
-      const data = generateCredential();
+      const data = generateNetWork();
 
-      const credential =  await prisma.credential.create({
+      const netWork =  await prisma.netWork.create({
         data: { ...data, userId: user.id }
       });
-      const response = await server.get(`/credentials/${credential.id}`).set("Authorization", `Bearer ${token}`);
+      const response = await server.get(`/network/${netWork.id}`).set("Authorization", `Bearer ${token}`);
       expect(response.status).toBe(httpStatus.OK);
     });
   });
 });
 
-describe("GET credentials", () => {
+describe("GET netWork", () => {
   it("should respond with status 401 if no token is given", async () => {
-    const response = await server.get("/credentials");
+    const response = await server.get("/network");
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
     
   it("should respond with status 401 if given token is not valid", async () => {
     const token = faker.lorem.word();
     
-    const response = await server.get("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.get("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
@@ -299,7 +272,7 @@ describe("GET credentials", () => {
     const userWithoutSession = await createUser();
     const token = jwt.sign({ userId: userWithoutSession.id }, process.env.JWT_SECRET);
     
-    const response = await server.get("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.get("/network").set("Authorization", `Bearer ${token}`);
     
     expect(response.status).toBe(httpStatus.UNAUTHORIZED);
   });
@@ -309,18 +282,15 @@ describe("GET credentials", () => {
     const token = await generateValidToken(user);
     const data = {
       title: faker.internet.domainWord(),
-      url: faker.internet.url(),
-      username: faker.internet.email(),
+      netWork: faker.internet.userName(),
       password: encrypt(faker.internet.password())
     };
 
-    await prisma.credential.create({
+    await prisma.netWork.create({
       data: { ...data, userId: user.id }
     });
-    await prisma.credential.create({
-      data: { ...data, userId: user.id }
-    });
-    const response = await server.get("/credentials").set("Authorization", `Bearer ${token}`);
+    
+    const response = await server.get("/network").set("Authorization", `Bearer ${token}`);
     expect(response.status).toBe(httpStatus.OK);
   });
   it("should respond with status 404 when userId exists but not correct token", async () => {
@@ -330,7 +300,7 @@ describe("GET credentials", () => {
       password: faker.internet.password(10)
     };
     const token = await generateValidToken(user);
-    const response = await server.get("/credentials").set("Authorization", `Bearer ${token}`);
+    const response = await server.get("/network").set("Authorization", `Bearer ${token}`);
     expect(response.status).toBe(httpStatus.NOT_FOUND);
   });
 });
