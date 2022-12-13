@@ -14,7 +14,7 @@ export type credential = {
 
 export const credentialSchema = joi.object<createCredentialParams>({
   title: joi.string().max(50).required(),
-  url: joi.string().required(),
+  url: joi.string().uri().required().trim(),
   username: joi.string().required(),
   password: joi.string().required(),
 });

@@ -2,12 +2,18 @@ import { createCredentialParams } from "@/schemas";
 import { prisma } from "../config/database";
 
 async function findAllCredential(userId: number) {
+  if(userId < 1) {
+    return null;
+  }
   return prisma.credential.findMany({
     where: { userId }
   });
 }
 
 async function findCredential(userId: number, credencialId: number) {
+  if(userId < 1 || credencialId < 1) {
+    return null;
+  }
   return prisma.credential.findFirst({
     where: {
       userId,
@@ -17,9 +23,8 @@ async function findCredential(userId: number, credencialId: number) {
 }
 
 async function findCredentialByTitle(userId: number, title: string) {
-  return prisma.credential.findFirst({
-    where: { userId, title }
-  });
+  const result  = await prisma.credential.findFirst( { where: { userId, title } } );
+  return result;
 }
 
 async function findCredentialByUrl(userId: number, url: string) {
@@ -28,9 +33,9 @@ async function findCredentialByUrl(userId: number, url: string) {
   });
 }
 
-async function insertCredential(userId: number, credential: createCredentialParams) {
+async function insertCredential(userId: number, credentialData: createCredentialParams) {
   return prisma.credential.create({
-    data: { ...credential, userId }
+    data: { ...credentialData, userId }
   });
 }
 

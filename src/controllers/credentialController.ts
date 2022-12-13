@@ -9,7 +9,6 @@ export async function findAllCredentials(req: AuthenticatedRequest, res: Respons
   const { userId } = req;
   try {
     const credentials = await credentialService.findAllCredentials(userId);
-    console.log("resultado", credentials);
     return res.status(httpStatus.OK).send(credentials);
   } catch (error) {
     return res.sendStatus(httpStatus.NOT_FOUND);
@@ -23,6 +22,7 @@ export async function findCredential(req: AuthenticatedRequest, res: Response) {
 
   try {
     const credential: Credential = await credentialService.findCredential(userId, credentialId);
+  
     res.status(httpStatus.OK).send(credential);
   } catch (error) {
     return res.sendStatus(httpStatus.NOT_FOUND);
@@ -37,6 +37,9 @@ export async function createCredential(req: AuthenticatedRequest, res: Response)
     const result = await credentialService.createCredential(userId, credential);
     res.status(httpStatus.CREATED).send(result);
   } catch (error) {
+    if(error.name === "ConflictError") {
+      res.sendStatus(httpStatus.CONFLICT).send(error);  
+    }
     return res.sendStatus(httpStatus.NOT_ACCEPTABLE);
   }
 }
@@ -44,7 +47,9 @@ export async function createCredential(req: AuthenticatedRequest, res: Response)
 export async function deleteCredential(req: AuthenticatedRequest, res: Response) {
   const { userId } = req;
   const credentialId = parseInt(req.params.id);
-  
+  if(isNaN(credentialId) || credentialId === 0) {
+    return res.sendStatus(httpStatus.NO_CONTENT);
+  }
   try {
     const result =  await credentialService.deleteCredential(userId, credentialId);
     res.status(httpStatus.MOVED_PERMANENTLY).send(result);
